@@ -1,6 +1,8 @@
 # ── Planning & internal docs ────────────────────────────────────────────────────
 AQUASENSE_PRODUCT_DESCRIPTION.txt
 PROMPT.txt
+AQUASENSE_ALVIN_BRANCH_PROMPT.txt
+AquaSense_git_prompt.md
 
 # ── Environment / secrets ───────────────────────────────────────────────────────
 .env
