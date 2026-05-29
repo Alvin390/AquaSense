@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "AquaSense",
+    "slug": "aquasense",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "aquasense",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A7EA4"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.aquasense.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "AquaSense uses your location to show water quality data for sources near you. Your location is never stored or shared.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "AquaSense uses your location to alert you about water quality changes near you."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0A7EA4"
+      },
+      "package": "com.aquasense.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0A7EA4"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "AquaSense uses your location to show water quality data for sources near you."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
