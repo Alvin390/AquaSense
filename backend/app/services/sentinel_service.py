@@ -1,5 +1,10 @@
-# SentinelService — Sentinel Hub Process API integration
-# Auth: OAuth2 client credentials (CLIENT_ID + CLIENT_SECRET)
-# Evalscript: computes NDWI (B3, B8), turbidity proxy (B4, B3), flood index (B11, B12)
-# For each water source bounding box → returns band stats (mean/min/max) as dict
-# Handles token refresh, request retry (3 attempts), and timeout (10s hard limit)
+class SentinelService:
+    """Sentinel Hub Process API — NDWI, turbidity proxy, flood index per source bbox."""
+
+    async def get_water_data(self, lat: float, lng: float) -> dict:
+        # TODO: Alvin
+        # 1. OAuth2 client_credentials → bearer token (CLIENT_ID + CLIENT_SECRET)
+        # 2. POST /api/v1/process with evalscript: bands B3, B4, B8, B11, B12
+        # 3. Return {"ndwi": float, "turbidity_proxy": float, "flood_index": float}
+        # Retry 3x, hard timeout 10s, token cached until expiry
+        raise NotImplementedError

@@ -1,4 +1,9 @@
-# PollutionService — OpenAQ API integration (api.openaq.org, free)
-# Fetches air quality readings near each water source as pollution proxy
-# Data fed into AI prompt context — NOT displayed directly to users
-# If API unavailable: returns None (AI prompt flags as "unknown")
+class PollutionService:
+    """OpenAQ API — air quality near source as pollution proxy for AI prompt context."""
+
+    async def get_pollution(self, lat: float, lng: float) -> float | None:
+        # TODO: Alvin
+        # GET https://api.openaq.org/v3/locations nearest to lat/lng
+        # Composite PM2.5 + NO2 index → float (0–100) or None if API unavailable
+        # None is valid — AI prompt flags as "pollution data unknown"
+        raise NotImplementedError
