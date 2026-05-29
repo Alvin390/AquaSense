@@ -1,6 +1,15 @@
 # ── Planning & internal docs ────────────────────────────────────────────────────
 AQUASENSE_PRODUCT_DESCRIPTION.txt
 PROMPT.txt
+AQUASENSE_ALVIN_BRANCH_PROMPT.txt
+AquaSense_git_prompt.md
+FIXES REQUIRES.txt
+
+# ── Alvin's working files ────────────────────────────────────────────────────────
+backend/.env
+ENV_SETUP.md
+MOSES_SATELLITE_HANDOFF.md
+ALVIN_WORK_PLAN.md
 
 # ── Environment / secrets ───────────────────────────────────────────────────────
 .env
