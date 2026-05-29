@@ -1,5 +1,18 @@
-# Settings — loads and validates all environment variables via pydantic-settings
-# Exposes a single `settings` singleton imported by all modules
-# Fields: sentinel_hub_client_id, sentinel_hub_client_secret,
-#         groq_api_key_1, groq_api_key_2, openaq_api_key,
-#         admin_api_key, database_url, debug, port
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    sentinel_hub_client_id: str = ""
+    sentinel_hub_client_secret: str = ""
+    groq_api_key_1: str = ""
+    groq_api_key_2: str = ""
+    openaq_api_key: str = ""
+    admin_api_key: str = "dev-admin-key"
+    database_url: str = "sqlite+aiosqlite:///./aquasense.db"
+    debug: bool = True
+    port: int = 8000
+
+    model_config = {"env_file": ".env"}
+
+
+settings = Settings()

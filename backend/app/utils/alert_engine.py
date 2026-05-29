@@ -1,7 +1,10 @@
-# Alert engine — evaluates latest reading against system-defined thresholds
-# Thresholds:
-#   ph_critical:   ph < 6.0 or ph > 9.0
-#   flood_high:    flood_risk_pct > 65
-#   water_scarce:  water_level in ('Very Low', 'Dry')
-# On breach: upserts AlertLog record, respects 6-hour notification throttle
-# Returns list of active alert types for the source
+def check_alerts(ph: float, flood_risk_pct: float, water_level: str) -> list[str]:
+    """Evaluate a reading against system thresholds. Returns triggered alert type strings."""
+    alerts: list[str] = []
+    if ph < 6.0 or ph > 9.0:
+        alerts.append("ph_critical")
+    if flood_risk_pct > 65:
+        alerts.append("flood_high")
+    if water_level in ("Very Low", "Dry"):
+        alerts.append("water_scarce")
+    return alerts
