@@ -248,17 +248,106 @@
 #     scheduler.shutdown()
 
 import logging
+import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sqlalchemy import select
-from datetime import datetime, timezone
+from sqlalchemy import select, and_
+from datetime import datetime, timezone, timedelta
 
 from app.database import AsyncSessionLocal
 from app.models.water_source import WaterSource
 from app.models.water_reading import WaterReading
 from app.models.ai_recommendation import AIRecommendation
+from app.models.alert_log import AlertLog
+from app.models.notification_subscription import NotificationSubscription
+from app.utils.alert_engine import check_alerts
 from app.services.sentinel_service import fetch_satellite_data
 from app.services.weather_service import fetch_weather_data
 from app.services.pollution_service import fetch_pollution_data
+
+EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
+
+ALERT_TITLES = {
+    "ph_critical": "WATER ALERT",
+    "flood_high": "FLOOD WARNING",
+    "water_scarce": "WATER SCARCITY ALERT",
+}
+
+ALERT_BODIES = {
+    "ph_critical": "pH levels at {name} are outside safe range. Avoid direct use — check AquaSense for details.",
+    "flood_high": "High flood risk near {name}. Water quality may be severely impacted. Open AquaSense for safety guidance.",
+    "water_scarce": "{name} is showing very low water levels. Plan for alternative water sources.",
+}
+
+
+async def _dispatch_push_notifications(
+    db,
+    source_id: int,
+    source_name: str,
+    triggered_types: list[str],
+) -> None:
+    """For each triggered alert type: throttle-check, write AlertLog, send Expo push."""
+    if not triggered_types:
+        return
+
+    throttle_cutoff = datetime.now(timezone.utc) - timedelta(hours=6)
+
+    for alert_type in triggered_types:
+        # 6-hour throttle: skip if an identical alert was already sent recently
+        existing = (await db.execute(
+            select(AlertLog).where(
+                and_(
+                    AlertLog.source_id == source_id,
+                    AlertLog.alert_type == alert_type,
+                    AlertLog.last_notified_at > throttle_cutoff,
+                )
+            )
+        )).scalar_one_or_none()
+
+        if existing:
+            continue
+
+        # Write alert log entry
+        log = AlertLog(
+            source_id=source_id,
+            alert_type=alert_type,
+            triggered_at=datetime.now(timezone.utc),
+            last_notified_at=datetime.now(timezone.utc),
+        )
+        db.add(log)
+        await db.commit()
+
+        # Find all push tokens subscribed to this source
+        subscriptions = (await db.execute(select(NotificationSubscription))).scalars().all()
+        tokens = [
+            sub.expo_push_token
+            for sub in subscriptions
+            if source_id in (sub.source_ids or [])
+        ]
+
+        if not tokens:
+            continue
+
+        body = ALERT_BODIES[alert_type].format(name=source_name)
+        messages = [
+            {
+                "to": token,
+                "sound": "default",
+                "title": ALERT_TITLES[alert_type],
+                "body": body,
+                "data": {"source_id": source_id, "alert_type": alert_type},
+            }
+            for token in tokens
+        ]
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                await client.post(EXPO_PUSH_URL, json=messages)
+            logger.info(
+                "Sent %d push notification(s) for %s — %s",
+                len(tokens), source_name, alert_type,
+            )
+        except Exception as exc:
+            logger.warning("Push dispatch failed for %s/%s: %s", source_name, alert_type, exc)
 
 # 1. Initialize core utilities
 logger = logging.getLogger(__name__)
@@ -343,6 +432,14 @@ async def fetch_all_data_job():
                 )
                 db.add(ai_rec)
                 await db.commit()
+
+                # 5. Check alert thresholds and dispatch push notifications
+                triggered = check_alerts(
+                    ph=reading.ph,
+                    flood_risk_pct=reading.flood_risk_pct,
+                    water_level=reading.water_level,
+                )
+                await _dispatch_push_notifications(db, source.id, source.name, triggered)
 
                 logger.info(f"Successfully processed pipeline for {source.name}")
             except Exception as e:
