@@ -2,7 +2,18 @@
 AQUASENSE_PRODUCT_DESCRIPTION.txt
 PROMPT.txt
 AQUASENSE_ALVIN_BRANCH_PROMPT.txt
+AQUASENSE_TEAM_RESTRUCTURE_PROMPT.txt
 AquaSense_git_prompt.md
+ENV_SETUP.md
+ALVIN_WORK_PLAN.md
+MOSES_SATELLITE_HANDOFF.md
+"FIXES REQUIRED.txt"
+FIDEL_WORK.txt
+LIZ_WORK.txt
+MOSES_WORK.txt
+BRIAN_WORK.txt
+RALPH_WORK.txt
+TED_WORK.txt
 
 # ── Environment / secrets ───────────────────────────────────────────────────────
 .env
