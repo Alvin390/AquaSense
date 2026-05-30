@@ -1,22 +1,47 @@
-// WaterSourceMarker: color-coded map pin (green=SAFE, amber=CAUTION, red=DO_NOT_USE)
-// Tap → bottom-sheet with quick stats + "View Full Details" CTA
-// TODO: Ralph (design) + Alex (data)
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 interface Props {
-  riskLabel: 'SAFE' | 'USE_WITH_CAUTION' | 'DO_NOT_USE';
+  status: 'SAFE' | 'USE_WITH_CAUTION' | 'DO_NOT_USE' | 'NO_DATA';
+  name?: string;
 }
 
 const COLOR: Record<string, string> = {
-  SAFE: '#27AE60',
-  USE_WITH_CAUTION: '#F39C12',
-  DO_NOT_USE: '#E74C3C',
+  SAFE: Colors.safeGreen,
+  USE_WITH_CAUTION: Colors.cautionAmber,
+  DO_NOT_USE: Colors.dangerRed,
+  NO_DATA: Colors.secondaryText,
 };
 
-export function WaterSourceMarker({ riskLabel }: Props) {
-  return <View style={[styles.pin, { backgroundColor: COLOR[riskLabel] ?? '#8F9BB3' }]} />;
+export function WaterSourceMarker({ status }: Props) {
+  const color = COLOR[status] ?? Colors.secondaryText;
+  return (
+    <View style={[styles.pin, { borderColor: color }]}>
+      <View style={[styles.fill, { backgroundColor: color }]} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  pin: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: '#fff' },
+  pin: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2.5,
+    borderColor: Colors.safeGreen,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  fill: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
 });
