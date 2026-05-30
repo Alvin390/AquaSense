@@ -29,8 +29,9 @@ async def get_sentinel_token() -> str:
     if _sentinel_token and _token_expiry and datetime.now() < _token_expiry:
         return _sentinel_token
 
-    client_id = os.getenv("SENTINEL_CLIENT_ID")
-    client_secret = os.getenv("SENTINEL_CLIENT_SECRET")
+    from app.config import settings
+    client_id = settings.sentinel_client_id
+    client_secret = settings.sentinel_client_secret
     
     if not client_id or not client_secret:
         raise ValueError("Sentinel credentials missing in .env")

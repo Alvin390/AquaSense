@@ -30,8 +30,8 @@ async def _check_external_apis() -> dict:
         logger.warning("Groq API key(s) not set — AI recommendations will use seeded fallback")
 
     # Sentinel Hub — check credentials are set
-    sentinel_ok = bool(settings.sentinel_hub_client_id and settings.sentinel_hub_client_secret)
-    results["sentinel_hub"] = "configured" if sentinel_ok else "MISSING — set SENTINEL_HUB_CLIENT_ID/SECRET in .env"
+    sentinel_ok = bool(settings.sentinel_client_id and settings.sentinel_client_secret)
+    results["sentinel_hub"] = "configured" if sentinel_ok else "MISSING — set SENTINEL_CLIENT_ID/SECRET in .env"
     if not sentinel_ok:
         logger.warning("Sentinel Hub credentials missing — satellite data will use seeded fallback")
 

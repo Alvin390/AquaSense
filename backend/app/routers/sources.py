@@ -3,8 +3,7 @@ from fastapi.security.api_key import APIKeyHeader
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from datetime import datetime, timezone
-import os
-
+from app.config import settings
 from app.database import get_db
 from app.models.water_source import WaterSource
 from app.models.water_reading import WaterReading
@@ -19,7 +18,7 @@ router = APIRouter(prefix="/sources", tags=["Sources"])
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 async def verify_api_key(api_key: str = Security(api_key_header)):
-    expected_key = os.getenv("ADMIN_API_KEY", "dev-admin-key")
+    expected_key = settings.internal_api_key
     if api_key != expected_key:
         raise HTTPException(status_code=401, detail={"error": True, "code": "UNAUTHORIZED", "message": "Invalid API Key"})
     return api_key

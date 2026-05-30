@@ -59,7 +59,7 @@ async def get_active_alerts(
         reading_query = (
             select(WaterReading)
             .where(WaterReading.source_id == source.id)
-            .order_by(desc(WaterReading.timestamp))
+            .order_by(desc(WaterReading.fetched_at))
             .limit(1)
         )
         reading_result = await db.execute(reading_query)
