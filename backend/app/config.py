@@ -2,22 +2,29 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Groq AI — matches .env keys GROQ_API_KEY_1 / GROQ_API_KEY_2
+    # Groq AI
     groq_api_key_1: str = ""
     groq_api_key_2: str = ""
+    groq_model_primary: str = "llama-3.3-70b-versatile"
+    groq_model_fallback: str = "llama-3.1-8b-instant"
 
-    # Sentinel Hub — matches .env keys SENTINEL_CLIENT_ID / SENTINEL_CLIENT_SECRET
+    # Sentinel Hub (Copernicus Data Space)
     sentinel_client_id: str = ""
     sentinel_client_secret: str = ""
+    sentinel_base_url: str = "https://sh.dataspace.copernicus.eu"
+    sentinel_token_url: str = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
 
-    # OpenAQ — matches .env key OPENAQ_API_KEY
+    # Open-Meteo (no key required)
+    open_meteo_base_url: str = "https://api.open-meteo.com/v1/forecast"
+
+    # OpenAQ
+    openaq_base_url: str = "https://api.openaq.org/"
     openaq_api_key: str = ""
 
-    # Admin key — matches .env key INTERNAL_API_KEY
+    # Internal
     internal_api_key: str = "dev-admin-key"
-
-    # Database — matches .env key DATABASE_URL
     database_url: str = "sqlite+aiosqlite:///./aquasense.db"
+    backend_url: str = "http://localhost:8000"
 
     debug: bool = True
     port: int = 8000

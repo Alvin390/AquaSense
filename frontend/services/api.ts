@@ -11,7 +11,7 @@ import type {
 // Demo day:  Alvin shares the ngrok URL — update this ONE line only.
 //            Do not hardcode any API keys here. The frontend has none.
  
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
  
 // ─── Axios Instance ───────────────────────────────────────────────────────────
 //
