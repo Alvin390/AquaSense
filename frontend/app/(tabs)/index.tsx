@@ -1,4 +1,10 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { getActiveAlerts } from '@/services/api';
+
+interface ActiveAlert {
+  type: 'ph_critical' | 'flood_high' | 'water_scarce';
+  sourceName: string;
+}
 
 interface SourceItem {
   id: number;
@@ -65,8 +71,31 @@ export default function MapScreen() {
   const [showRainfallOverlay, setShowRainfallOverlay] = useState(false);
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const [selectedSource, setSelectedSourceLocal] = useState<SourceItem | null>(null);
+  const [activeAlert, setActiveAlert] = useState<ActiveAlert | null>(null);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchAlerts = useCallback(async () => {
+    const lat = userLocation?.lat ?? -1.2921;
+    const lng = userLocation?.lng ?? 36.8219;
+    try {
+      const alerts = await getActiveAlerts(lat, lng, 25);
+      if (alerts.length > 0) {
+        const first = alerts[0] as any;
+        setActiveAlert({ type: first.alert_type, sourceName: first.source_name });
+      } else {
+        setActiveAlert(null);
+      }
+    } catch {
+      // silently fail — banner stays hidden on network error
+    }
+  }, [userLocation]);
+
+  useEffect(() => {
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 5 * 60 * 1000); // re-check every 5 min
+    return () => clearInterval(interval);
+  }, [fetchAlerts]);
 
   const { data: apiSources } = useWaterSources(selectedCity ?? undefined);
   const sources = (apiSources as any[]) ?? DEMO_SOURCES;
@@ -96,7 +125,6 @@ export default function MapScreen() {
     router.push('/(tabs)/quality');
   }
 
-  const demoAlert = null; // Set to an alert object to demo AlertBanner
 
   const CITIES = ['Nairobi', 'Mombasa', 'Kisumu'] as const;
 
@@ -112,7 +140,7 @@ export default function MapScreen() {
       />
 
       {/* Alert banner — conditional */}
-      <AlertBanner alert={demoAlert} onPress={() => router.push('/(tabs)/recommendations')} />
+      <AlertBanner alert={activeAlert} onPress={() => router.push('/(tabs)/recommendations')} />
 
       {/* Search bar */}
       <SafeAreaView style={styles.topBar} pointerEvents="box-none">
