@@ -17,9 +17,9 @@ export function formatPH(value: number): string {
 }
 
 export function formatFloodRisk(pct: number): string {
-  if (pct < 25) return `Low Risk — ${pct.toFixed(0)}%`;
-  if (pct < 50) return `Moderate Risk — ${pct.toFixed(0)}%`;
-  if (pct < 75) return `High Risk — ${pct.toFixed(0)}%`;
+  if (pct < 30) return `Low Risk — ${pct.toFixed(0)}%`;
+  if (pct < 60) return `Moderate Risk — ${pct.toFixed(0)}%`;
+  if (pct < 80) return `High Risk — ${pct.toFixed(0)}%`;
   return `Severe Risk — ${pct.toFixed(0)}%`;
 }
 
