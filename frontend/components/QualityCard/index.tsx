@@ -52,7 +52,7 @@ export function QualityCard({ label, value, status, safeRange, fillPercent = 50 
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   label: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.secondaryText,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   chipText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
   },
   value: {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   safeRange: {
-    fontSize: 11,
+    fontSize: 14,
     color: Colors.secondaryText,
     marginTop: 2,
   },

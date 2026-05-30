@@ -86,12 +86,12 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   outOf: {
-    fontSize: 11,
+    fontSize: 14,
     color: Colors.secondaryText,
     fontWeight: '500',
   },
   label: {
-    fontSize: 12,
+    fontSize: 14,
     color: Colors.secondaryText,
     fontWeight: '600',
     marginTop: 6,

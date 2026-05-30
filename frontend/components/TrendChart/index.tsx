@@ -94,8 +94,8 @@ export function TrendChart({ phData, floodData, levelData, labels }: Props) {
             stroke: lineColor,
             fill: '#FFFFFF',
           },
-          propsForHorizontalLabels: { fontSize: 10 },
-          propsForLabels: { fontSize: 10 },
+          propsForHorizontalLabels: { fontSize: 14 },
+          propsForLabels: { fontSize: 14 },
           decimalPlaces: active === 'ph' ? 1 : 0,
           fillShadowGradient: lineColor,
           fillShadowGradientOpacity: 0.08,
@@ -110,7 +110,7 @@ export function TrendChart({ phData, floodData, levelData, labels }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.secondaryText,
     fontWeight: '500',
   },

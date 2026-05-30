@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cityChipActive: { backgroundColor: Colors.primaryTeal, borderColor: Colors.primaryTeal },
-  cityChipText: { fontSize: 13, fontWeight: '600', color: Colors.darkText },
+  cityChipText: { fontSize: 14, fontWeight: '600', color: Colors.darkText },
   cityChipTextActive: { color: '#FFFFFF' },
   layerPanel: {
     backgroundColor: '#FFFFFF',
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   layerTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     color: Colors.secondaryText,
     textTransform: 'uppercase',
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   riskDot: { width: 7, height: 7, borderRadius: 3.5 },
-  riskLabel: { fontSize: 12, fontWeight: '800', letterSpacing: 0.8 },
+  riskLabel: { fontSize: 14, fontWeight: '800', letterSpacing: 0.8 },
   statsRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -448,8 +448,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
   },
-  statLabel: { fontSize: 10, color: Colors.secondaryText, fontWeight: '600' },
-  statValue: { fontSize: 12, color: Colors.darkText, fontWeight: '700', textAlign: 'center' },
+  statLabel: { fontSize: 14, color: Colors.secondaryText, fontWeight: '600' },
+  statValue: { fontSize: 14, color: Colors.darkText, fontWeight: '700', textAlign: 'center' },
   detailsBtn: {
     backgroundColor: Colors.primaryTeal,
     borderRadius: Radius.sm,

@@ -39,11 +39,14 @@ export function LiveSavedBadge({ isLive, hoursAgo, lastUpdated }: Props) {
     opacity: pulseOpacity.value,
   }));
 
-  const displayHours = hoursAgo ?? (lastUpdated
-    ? Math.round((Date.now() - new Date(lastUpdated).getTime()) / 3_600_000)
-    : null);
+  const displayHours = hoursAgo !== undefined && hoursAgo !== null
+    ? hoursAgo
+    : lastUpdated
+      ? Math.round((Date.now() - new Date(lastUpdated).getTime()) / 3_600_000)
+      : null;
 
-  const label = isLive ? 'Live' : displayHours ? `Saved · ${displayHours}h ago` : 'Saved';
+  const timeStr = displayHours !== null ? `${displayHours}h ago` : 'recently';
+  const label = isLive ? 'Live' : `Saved · ${timeStr}`;
   const dotColor = isLive ? Colors.primaryTeal : Colors.cautionAmber;
   const textColor = isLive ? Colors.primaryTeal : Colors.secondaryText;
   const bg = isLive ? Colors.primaryTeal + '15' : '#F0F0F0';
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   text: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.2,
   },

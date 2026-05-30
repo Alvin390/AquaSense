@@ -95,8 +95,6 @@ export default function QualityScreen() {
   const phHistory = history7.length ? history7.map((r: any) => r.ph ?? 7.0) : undefined;
   const floodHistory = history7.length ? history7.map((r: any) => r.flood_risk_pct ?? 30) : undefined;
 
-  const hoursAgo = Math.round((Date.now() - new Date(fetchedAt).getTime()) / 3_600_000);
-
   return (
     <SafeAreaView style={styles.root}>
       {/* Header */}
@@ -110,7 +108,7 @@ export default function QualityScreen() {
             {source.lat.toFixed(4)}, {source.lng.toFixed(4)}
           </Text>
         </View>
-        <LiveSavedBadge isLive={isGPSMode || false} hoursAgo={hoursAgo} />
+        <LiveSavedBadge isLive={isGPSMode || false} lastUpdated={fetchedAt} />
       </View>
 
       <ScrollView
@@ -225,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.backgroundWhite,
     borderBottomWidth: 1,
     borderBottomColor: '#E8F4F8',
     gap: Spacing.sm,
@@ -246,12 +244,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   headerCoords: {
-    fontSize: 11,
+    fontSize: 14,
     color: Colors.secondaryText,
     marginTop: 1,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 14,
     color: Colors.secondaryText,
     marginBottom: Spacing.md,
     marginTop: -4,
@@ -268,7 +266,7 @@ const styles = StyleSheet.create({
   },
   gaugeCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: Radius.md,
     padding: Spacing.md,
     alignItems: 'center',
@@ -285,12 +283,12 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   scoreBadgeText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.8,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     color: Colors.secondaryText,
     textTransform: 'uppercase',
@@ -299,7 +297,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   aiCTA: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginTop: Spacing.sm,
