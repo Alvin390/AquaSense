@@ -23,8 +23,11 @@ logger = logging.getLogger(__name__)
 
 async def _probe_groq() -> str:
     """Live probe: attempt a real 1-token completion to verify the key works."""
+    failures: list[str] = []
+
     for label, key in [("key_1", settings.groq_api_key_1), ("key_2", settings.groq_api_key_2)]:
         if not key:
+            failures.append(f"{label}: not set")
             continue
         try:
             client = Groq(api_key=key)
@@ -36,21 +39,24 @@ async def _probe_groq() -> str:
             )
             logger.info("Groq live probe OK using %s", label)
             return f"reachable ({label} authenticated)"
-        except AuthenticationError:
-            logger.warning("Groq %s: invalid or expired API key", label)
+        except AuthenticationError as exc:
+            detail = str(exc)
+            logger.warning("Groq %s: authentication failed — %s", label, detail)
+            failures.append(f"{label}: invalid key — {detail}")
         except RateLimitError:
             # Rate-limited means the key IS valid — the API accepted it
             logger.info("Groq %s: rate limited but key is valid", label)
             return f"reachable ({label} valid — rate limited)"
         except APIConnectionError as exc:
-            logger.warning("Groq %s: connection error — %s", label, exc)
-            return f"unreachable — network error ({exc})"
+            logger.warning("Groq %s: network unreachable — %s", label, exc)
+            failures.append(f"{label}: network error — {exc}")
         except Exception as exc:
             logger.warning("Groq %s: unexpected error — %s", label, exc)
+            failures.append(f"{label}: unexpected — {exc}")
 
     if not settings.groq_api_key_1 and not settings.groq_api_key_2:
         return "MISSING — set GROQ_API_KEY_1 in .env"
-    return "FAILED — both keys rejected or unreachable"
+    return "FAILED — " + " | ".join(failures)
 
 
 async def _probe_sentinel() -> str:
@@ -66,10 +72,13 @@ async def _probe_sentinel() -> str:
     except ValueError as exc:
         return f"MISSING credentials — {exc}"
     except httpx.HTTPStatusError as exc:
-        return f"FAILED — HTTP {exc.response.status_code} from token endpoint"
+        body = exc.response.text[:300]  # Copernicus returns JSON with error_description
+        return f"FAILED — HTTP {exc.response.status_code} from token endpoint: {body}"
+    except httpx.ConnectError as exc:
+        return f"unreachable — could not connect to token endpoint ({exc})"
     except Exception as exc:
         logger.warning("Sentinel Hub probe failed: %s", exc)
-        return f"unreachable — {exc}"
+        return f"FAILED — {type(exc).__name__}: {exc}"
 
 
 async def _check_external_apis() -> dict:
@@ -111,7 +120,9 @@ async def _probe_open_meteo() -> str:
                 settings.open_meteo_base_url,
                 params={"latitude": -1.29, "longitude": 36.82, "hourly": "precipitation", "forecast_days": 1},
             )
-        return "reachable" if resp.status_code == 200 else f"HTTP {resp.status_code}"
+        if resp.status_code == 200:
+            return "reachable"
+        return f"HTTP {resp.status_code} — {resp.text[:200]}"
     except Exception as exc:
         logger.warning("Open-Meteo unreachable at startup: %s", exc)
         return f"unreachable — {exc}"
@@ -127,7 +138,9 @@ async def _probe_openaq() -> str:
                 params={"limit": 1},
                 headers={"X-API-Key": settings.openaq_api_key},
             )
-        return "reachable" if resp.status_code == 200 else f"HTTP {resp.status_code}"
+        if resp.status_code == 200:
+            return "reachable"
+        return f"HTTP {resp.status_code} — {resp.text[:200]}"
     except Exception as exc:
         logger.warning("OpenAQ unreachable at startup: %s", exc)
         return f"unreachable — {exc}"
