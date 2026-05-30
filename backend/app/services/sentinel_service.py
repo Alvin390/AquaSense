@@ -22,25 +22,24 @@ _sentinel_token = None
 _token_expiry = None
 
 async def get_sentinel_token() -> str:
-    """Authenticates with Sentinel Hub via OAuth2."""
+    """Authenticates with Sentinel Hub (Copernicus Data Space) via OAuth2."""
     global _sentinel_token, _token_expiry
-    
-    # Return cached token if still valid
+
     if _sentinel_token and _token_expiry and datetime.now() < _token_expiry:
         return _sentinel_token
 
     from app.config import settings
     client_id = settings.sentinel_client_id
     client_secret = settings.sentinel_client_secret
-    
+
     if not client_id or not client_secret:
         raise ValueError("Sentinel credentials missing in .env")
 
-    url = "https://services.sentinel-hub.com/auth/realms/main/protocol/openid-connect/token"
+    url = settings.sentinel_token_url
     data = {
         "grant_type": "client_credentials",
         "client_id": client_id,
-        "client_secret": client_secret
+        "client_secret": client_secret,
     }
     
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -58,12 +57,13 @@ from app.utils.water_math import ndwi, turbidity_proxy, flood_index
 
 async def fetch_satellite_data(lat: float, lng: float) -> dict:
     """
-    Fetches band stats (B3, B4, B8, B11, B12) from Sentinel Hub.
+    Fetches band stats (B3, B4, B8, B11) from Sentinel Hub (Copernicus Data Space).
     Falls back to seeded data on any failure to protect the demo.
     """
+    from app.config import settings
     try:
         token = await get_sentinel_token()
-        url = "https://services.sentinel-hub.com/api/v1/statistics"
+        url = f"{settings.sentinel_base_url}/api/v1/statistics"
         headers = {
             "Authorization": f"Bearer {token}", 
             "Content-Type": "application/json"
@@ -137,14 +137,17 @@ async def fetch_satellite_data(lat: float, lng: float) -> dict:
         }
 
 def parse_sentinel_response(data: dict) -> dict:
-    """Parses Statistics API output into meaningful water indices."""
+    """Parses Statistics API output into meaningful water indices.
+
+    The evalscript returns [B03, B04, B08, B11] in order, so the Statistics API
+    labels them B0, B1, B2, B3 (zero-indexed) — NOT the original band names.
+    """
     try:
-        # Extract means from the first aggregation result
         outputs = data['data'][0]['outputs']['default']['bands']
-        b3 = outputs['B03']['stats']['mean']
-        b4 = outputs['B04']['stats']['mean']
-        b8 = outputs['B08']['stats']['mean']
-        b11 = outputs['B11']['stats']['mean']
+        b3 = outputs['B0']['stats']['mean']   # evalscript position 0 = B03 (Green)
+        b4 = outputs['B1']['stats']['mean']   # evalscript position 1 = B04 (Red)
+        b8 = outputs['B2']['stats']['mean']   # evalscript position 2 = B08 (NIR)
+        b11 = outputs['B3']['stats']['mean']  # evalscript position 3 = B11 (SWIR)
 
         ndwi_val = ndwi(b3, b8)
         turb = turbidity_proxy(b4, b3)

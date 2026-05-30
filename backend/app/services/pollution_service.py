@@ -35,9 +35,14 @@ async def get_pollution_context(lat: float, lng: float) -> str:
         "limit": 5
     }
     
+    from app.config import settings
+    headers = {}
+    if settings.openaq_api_key:
+        headers["X-API-Key"] = settings.openaq_api_key
+
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(url, params=params)
+            response = await client.get(url, params=params, headers=headers)
             response.raise_for_status()
             data = response.json()
             

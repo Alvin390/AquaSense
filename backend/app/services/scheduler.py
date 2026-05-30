@@ -447,9 +447,15 @@ async def fetch_all_data_job():
 
 # 4. Lifecycle control hooks
 def start_scheduler():
-    scheduler.add_job(fetch_all_data_job, "interval", hours=36, id="data_refresh")
+    scheduler.add_job(
+        fetch_all_data_job,
+        "interval",
+        hours=36,
+        id="data_refresh",
+        next_run_time=datetime.now(timezone.utc),  # run immediately on startup
+    )
     scheduler.start()
-    logger.info("Scheduler started.")
+    logger.info("Scheduler started — first data fetch triggered immediately.")
 
 def stop_scheduler():
     scheduler.shutdown()
