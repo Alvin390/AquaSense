@@ -247,6 +247,7 @@
 # def stop_scheduler():
 #     scheduler.shutdown()
 
+import asyncio
 import logging
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -442,6 +443,8 @@ async def fetch_all_data_job():
                 await _dispatch_push_notifications(db, source.id, source.name, triggered)
 
                 logger.info(f"Successfully processed pipeline for {source.name}")
+            except asyncio.CancelledError:
+                raise  # server is shutting down / hot-reloading — exit cleanly
             except Exception as e:
                 logger.error(f"Pipeline failed for {source.name}: {e}")
 

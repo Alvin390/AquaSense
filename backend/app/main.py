@@ -72,10 +72,19 @@ async def _probe_sentinel() -> str:
     except ValueError as exc:
         return f"MISSING credentials — {exc}"
     except httpx.HTTPStatusError as exc:
-        body = exc.response.text[:300]  # Copernicus returns JSON with error_description
+        body = exc.response.text[:300]
+        if exc.response.status_code == 401:
+            return (
+                "FAILED — 401 Unauthorized. Your SENTINEL_CLIENT_ID/SECRET are rejected by "
+                "Copernicus Data Space. Old sentinel-hub.com credentials do NOT work here — "
+                "create new OAuth2 credentials at: dataspace.copernicus.eu → Dashboard → "
+                f"User Settings → OAuth clients. Raw error: {body}"
+            )
         return f"FAILED — HTTP {exc.response.status_code} from token endpoint: {body}"
     except httpx.ConnectError as exc:
         return f"unreachable — could not connect to token endpoint ({exc})"
+    except asyncio.CancelledError:
+        raise
     except Exception as exc:
         logger.warning("Sentinel Hub probe failed: %s", exc)
         return f"FAILED — {type(exc).__name__}: {exc}"
@@ -134,13 +143,15 @@ async def _probe_openaq() -> str:
     try:
         async with httpx.AsyncClient(timeout=6.0) as client:
             resp = await client.get(
-                f"{settings.openaq_base_url}v2/latest",
-                params={"limit": 1},
+                f"{settings.openaq_base_url}v3/locations",
+                params={"coordinates": "-1.29,36.82", "radius": 10000, "limit": 1},
                 headers={"X-API-Key": settings.openaq_api_key},
             )
         if resp.status_code == 200:
             return "reachable"
         return f"HTTP {resp.status_code} — {resp.text[:200]}"
+    except asyncio.CancelledError:
+        raise
     except Exception as exc:
         logger.warning("OpenAQ unreachable at startup: %s", exc)
         return f"unreachable — {exc}"

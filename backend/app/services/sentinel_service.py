@@ -10,6 +10,7 @@
 #         raise NotImplementedError
 
 
+import asyncio
 import httpx
 import logging
 import os
@@ -125,9 +126,18 @@ async def fetch_satellite_data(lat: float, lng: float) -> dict:
                 logger.warning(f"Sentinel API call failed: {api_err}. Using fallback.")
                 raise api_err
 
+    except asyncio.CancelledError:
+        raise  # never swallow task cancellations — let them propagate cleanly
     except Exception as e:
-        logger.warning(f"Sentinel API fallback triggered for {lat},{lng}: {str(e)}")
-        # Bulletproof demo fallback data
+        if isinstance(e, httpx.HTTPStatusError) and e.response.status_code == 401:
+            logger.warning(
+                "Sentinel Hub 401 for %s,%s — credentials rejected by Copernicus Data Space. "
+                "Create new OAuth2 credentials at dataspace.copernicus.eu → Dashboard → "
+                "User Settings → OAuth clients (old sentinel-hub.com keys do not work here).",
+                lat, lng,
+            )
+        else:
+            logger.warning("Sentinel API fallback triggered for %s,%s: %s", lat, lng, e)
         return {
             "ndwi": 0.42,              
             "turbidity_proxy": 14.5,   

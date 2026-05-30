@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import logging
 
@@ -5,72 +6,72 @@ logger = logging.getLogger(__name__)
 
 
 async def fetch_pollution_data(lat: float, lng: float) -> dict:
-    """
-    Moses' wrapper for the scheduler. 
-    Returns a numeric pollution index derived from air quality proxy.
-    """
+    """Returns a numeric pollution index derived from OpenAQ air quality data."""
     context = await get_pollution_context(lat, lng)
-    
-    # Simple heuristic for demo: count parameters to derive an index
-    # (In real life, we'd parse PM2.5/PM10 values)
     if "unavailable" in context:
-        return {"pollution_index": 25.0} # Baseline
-    
+        return {"pollution_index": 25.0}
     param_count = context.count("- ")
     index = 10.0 + (param_count * 5.0)
     return {"pollution_index": min(index, 100.0)}
 
+
 async def get_pollution_context(lat: float, lng: float) -> str:
     """
-    Fetches air/pollution proxy data from OpenAQ near the given coordinates
-    and formats it into a clean contextual string for the AI prompt engine.
-    
-    Falls back gracefully to a standard string if the API is down or data is missing.
+    Fetches air quality data from OpenAQ v3 near the given coordinates.
+    Two-step: find nearest location, then fetch its latest measurements.
+    Falls back gracefully if the API is down or returns no data.
     """
-    url = "https://api.openaq.org/v2/latest"
-    # OpenAQ v2 expects coordinates formatted as "lat,lng" string
-    params = {
-        "coordinates": f"{lat},{lng}",
-        "radius": 10000,  # Expand to 10km radius for better coverage in Nairobi outskirts
-        "limit": 5
-    }
-    
     from app.config import settings
     headers = {}
     if settings.openaq_api_key:
         headers["X-API-Key"] = settings.openaq_api_key
 
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            
-        results = data.get("results")
-        if not results:
-            logger.info(f"No OpenAQ sensor data found within radius for coordinates: {lat}, {lng}")
-            return "Pollution data unavailable."
-            
-        # Extract and compile a text summary of the closest measurements
-        context_parts = []
-        first_location = results[0]
-        location_name = first_location.get("location", "Unknown Station")
-        
-        context_parts.append(f"Air quality data from nearest monitoring station ({location_name}):")
-        
-        for measurement in first_location.get("measurements", []):
-            parameter = measurement.get("parameter", "unknown").upper()
-            value = measurement.get("value")
-            unit = measurement.get("unit", "")
-            if value is not None:
-                context_parts.append(f"- {parameter}: {value} {unit}")
-                
-        # Join into a clean paragraph block for Moses to append to the prompt context
-        return " ".join(context_parts)
-        
-    except httpx.HTTPError as http_err:
-        logger.warning(f"OpenAQ API connection issue: {str(http_err)}")
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            # Step 1 — find the nearest monitoring station
+            loc_resp = await client.get(
+                "https://api.openaq.org/v3/locations",
+                params={"coordinates": f"{lat},{lng}", "radius": 10000, "limit": 1},
+                headers=headers,
+            )
+            loc_resp.raise_for_status()
+            locations = loc_resp.json().get("results", [])
+
+            if not locations:
+                logger.info("No OpenAQ v3 station within 10km of %s,%s", lat, lng)
+                return "Pollution data unavailable."
+
+            location = locations[0]
+            location_id = location["id"]
+            location_name = location.get("name", "Unknown Station")
+
+            # Step 2 — get latest measurements for that station
+            meas_resp = await client.get(
+                f"https://api.openaq.org/v3/locations/{location_id}/latest",
+                headers=headers,
+            )
+            meas_resp.raise_for_status()
+            measurements = meas_resp.json().get("results", [])
+
+            if not measurements:
+                return f"Air quality station found ({location_name}) but no recent measurements available."
+
+            context_parts = [f"Air quality data from nearest monitoring station ({location_name}):"]
+            for m in measurements:
+                param = m.get("parameter", {})
+                name = param.get("name", "unknown").upper()
+                value = m.get("value")
+                units = param.get("units", "")
+                if value is not None:
+                    context_parts.append(f"- {name}: {value} {units}")
+
+            return " ".join(context_parts)
+
+    except asyncio.CancelledError:
+        raise
+    except httpx.HTTPError as exc:
+        logger.warning("OpenAQ API error: %s", exc)
         return "Pollution data unavailable."
-    except Exception as e:
-        logger.error(f"Unexpected error in pollution service: {str(e)}", exc_info=True)
+    except Exception as exc:
+        logger.error("Unexpected error in pollution service: %s", exc, exc_info=True)
         return "Pollution data unavailable."
