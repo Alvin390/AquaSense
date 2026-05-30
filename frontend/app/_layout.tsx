@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Colors } from '@/constants/theme';
+import { checkHealth } from '@/services/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,17 @@ function SplashOverlay({ onDone }: { onDone: () => void }) {
 
 export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
+
+  useEffect(() => {
+    checkHealth()
+      .then(result => {
+        console.log('[AquaSense] ✅ Backend connected —', JSON.stringify(result));
+      })
+      .catch(err => {
+        console.error('[AquaSense] ❌ Backend unreachable —', err.message);
+        console.error('[AquaSense] Check EXPO_PUBLIC_API_URL in frontend/.env');
+      });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

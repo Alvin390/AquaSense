@@ -1,11 +1,17 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 import httpx
 from groq import Groq, AuthenticationError, APIConnectionError, RateLimitError
+
+# Ensure all app-level loggers emit INFO and above.
+# Python's root logger defaults to WARNING, which silently drops our
+# health check success messages. SQLAlchemy works around this with echo=True;
+# we fix it properly here for the entire app namespace.
+logging.getLogger("app").setLevel(logging.INFO)
 
 from app.config import settings
 from app.database import engine, Base
@@ -207,7 +213,14 @@ app.include_router(notifications.router)
 
 
 @app.get("/health")
-async def health():
+async def health(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+    origin = request.headers.get("origin", "no-origin")
+    logger.info(
+        "🔗 Frontend connected — IP: %s | Origin: %s | UA: %.60s",
+        client_ip, origin, user_agent,
+    )
     return {
         "status": "ok",
         "service": "aquasense",
