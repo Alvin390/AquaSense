@@ -5,13 +5,35 @@ def ndwi(b3: float, b8: float) -> float:
 
 
 def turbidity_proxy(b4: float, b3: float) -> float:
-    # TODO: Moses — derive NTU proxy from B4/B3 ratio from Sentinel-2 stats
-    raise NotImplementedError
+    """
+    Derives an NTU proxy from the Red (B4) / Green (B3) ratio.
+    Higher ratios typically correlate with higher suspended sediment (turbidity).
+    Formula: (B4 / B3) * 100 clamped to reasonable NTU range.
+    """
+    if b3 == 0:
+        return 0.0
+    ratio = b4 / b3
+    # Empirical scaling for demo purposes: 1.0 ratio ~ 20 NTU
+    ntu = ratio * 20.0
+    return round(min(max(ntu, 0.0), 500.0), 2)
 
 
 def flood_index(ndwi_val: float, b11: float) -> float:
-    # TODO: Moses — combine ndwi with SWIR band B11 to estimate flood probability 0–1
-    raise NotImplementedError
+    """
+    Combines NDWI with SWIR (B11) to estimate flood probability.
+    SWIR is highly absorbed by water; NDWI detects water presence.
+    Formula: weighted combo of NDWI and inverse SWIR reflectance.
+    """
+    # Normalize NDWI from [-1, 1] to [0, 1]
+    ndwi_norm = (ndwi_val + 1) / 2
+    
+    # B11 (SWIR) typically ranges 0-0.5. Low B11 = high moisture.
+    # Inverse B11 mapping: 0.0 -> 1.0, 0.4+ -> 0.0
+    swir_score = max(0, 1 - (b11 / 0.4))
+    
+    # Flood probability is high if both water is detected and SWIR absorption is high
+    prob = (ndwi_norm * 0.6) + (swir_score * 0.4)
+    return round(min(max(prob, 0.0), 1.0), 2)
 
 
 def calc_quality_score(ph: float, turbidity: float, pollution_index: float | None) -> int:

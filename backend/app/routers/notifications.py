@@ -1,25 +1,44 @@
-from fastapi import APIRouter, status
-from app.schemas import NotificationRegisterBody  # Moses's schema
+from fastapi import APIRouter, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.models.notification_subscription import NotificationSubscription
+from app.schemas import NotificationRegisterBody
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
-# Simple, global in-memory database substitute for the hackathon
-# Key: expo_push_token (str) -> Value: list of source_ids (list[int])
-PUSH_TOKEN_REGISTRY: dict[str, list[int]] = {}
-
 
 @router.post("/register", status_code=status.HTTP_200_OK)
-async def register_notifications(body: NotificationRegisterBody):
+async def register_notifications(
+    body: NotificationRegisterBody,
+    db: AsyncSession = Depends(get_db)
+):
     """
-    Registers or updates an Expo Push Token and links it to specific 
+    Registers or updates an Expo Push Token and links it to specific
     Water Source IDs that the user wants to monitor.
     """
-    # 1. Extract data from Moses's schema
     token = body.expo_push_token
     source_ids = body.source_ids_to_watch
-    
-    # 2. Upsert into our global registry
-    PUSH_TOKEN_REGISTRY[token] = source_ids
-    
-    # 3. Return standard success JSON format for Fidel
-    return {"success": True}
+
+    query = select(NotificationSubscription).where(
+        NotificationSubscription.expo_push_token == token
+    )
+    result = await db.execute(query)
+    subscription = result.scalar_one_or_none()
+
+    if subscription:
+        subscription.source_ids = source_ids
+    else:
+        new_subscription = NotificationSubscription(
+            expo_push_token=token,
+            source_ids=source_ids
+        )
+        db.add(new_subscription)
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }

@@ -4,6 +4,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+async def fetch_pollution_data(lat: float, lng: float) -> dict:
+    """
+    Moses' wrapper for the scheduler. 
+    Returns a numeric pollution index derived from air quality proxy.
+    """
+    context = await get_pollution_context(lat, lng)
+    
+    # Simple heuristic for demo: count parameters to derive an index
+    # (In real life, we'd parse PM2.5/PM10 values)
+    if "unavailable" in context:
+        return {"pollution_index": 25.0} # Baseline
+    
+    param_count = context.count("- ")
+    index = 10.0 + (param_count * 5.0)
+    return {"pollution_index": min(index, 100.0)}
+
 async def get_pollution_context(lat: float, lng: float) -> str:
     """
     Fetches air/pollution proxy data from OpenAQ near the given coordinates
