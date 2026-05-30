@@ -110,14 +110,27 @@ async def _check_external_apis() -> dict:
 
     logger.info("External API health check: %s", results)
 
-    critical_ok = (
-        "reachable" in results["groq"]
-        and "reachable" in results["sentinel_hub"]
-    )
-    if critical_ok:
+    groq_ok = "reachable" in results["groq"]
+    sentinel_ok = "reachable" in results["sentinel_hub"]
+    open_meteo_ok = results["open_meteo"] == "reachable"
+
+    if groq_ok and sentinel_ok:
         logger.info("✅ All critical external APIs live and responding — backend ready")
     else:
-        logger.warning("⚠️  One or more critical APIs failed — demo will fall back to seeded data")
+        failed = []
+        if not groq_ok:
+            failed.append(f"groq ({results['groq']})")
+        if not sentinel_ok:
+            failed.append(f"sentinel_hub ({results['sentinel_hub'][:120]})")
+        logger.warning("⚠️  Critical API(s) unavailable: %s", " | ".join(failed))
+
+    if not open_meteo_ok:
+        logger.warning("⚠️  Open-Meteo unavailable — weather data will use fallback: %s", results["open_meteo"])
+    else:
+        logger.info("✅ Open-Meteo reachable — live weather data enabled")
+
+    if groq_ok:
+        logger.info("✅ Groq reachable — AI recommendations enabled")
 
     return results
 
@@ -132,6 +145,8 @@ async def _probe_open_meteo() -> str:
         if resp.status_code == 200:
             return "reachable"
         return f"HTTP {resp.status_code} — {resp.text[:200]}"
+    except asyncio.CancelledError:
+        raise
     except Exception as exc:
         logger.warning("Open-Meteo unreachable at startup: %s", exc)
         return f"unreachable — {exc}"
