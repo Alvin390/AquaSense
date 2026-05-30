@@ -2,7 +2,7 @@
 // Contract: Ralph imports this freshness badge for Tab 2 headers.
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '@/constants/theme';
-import { formatTimestamp } from '@/utils/formatters';
+import { formatRelativeTime } from '@/utils/formatters';
 
 interface LiveSavedBadgeProps {
   isLive: boolean;
@@ -10,7 +10,7 @@ interface LiveSavedBadgeProps {
 }
 
 export function LiveSavedBadge({ isLive, lastUpdated }: LiveSavedBadgeProps) {
-  const label = isLive ? 'Live' : `Saved - ${formatTimestamp(lastUpdated)}`;
+  const label = isLive ? 'Live' : `Saved · ${formatRelativeTime(lastUpdated)}`;
   const color = isLive ? Colors.primaryTeal : Colors.cautionAmber;
 
   return (
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: Colors.darkText,
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
   },
 });

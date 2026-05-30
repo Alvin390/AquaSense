@@ -12,6 +12,12 @@ type RiskLabel = 'SAFE' | 'USE_WITH_CAUTION' | 'DO_NOT_USE' | null;
 const NO_DATA_MESSAGE =
   'AI recommendations are not available for this source yet. Check the latest water quality screen or try another source.';
 
+const BANNER_LABEL: Record<Exclude<RiskLabel, null>, string> = {
+  SAFE: 'SAFE TO USE',
+  USE_WITH_CAUTION: 'USE WITH CAUTION',
+  DO_NOT_USE: 'DO NOT USE WITHOUT TREATMENT',
+};
+
 function getIconType(text: string): RecommendationIconType {
   const lowerText = text.toLowerCase();
   if (lowerText.includes('boil')) return 'BOIL';
@@ -29,10 +35,7 @@ function riskColor(riskLabel: RiskLabel) {
 }
 
 function riskTitle(riskLabel: RiskLabel) {
-  if (riskLabel === 'SAFE') return 'SAFE';
-  if (riskLabel === 'USE_WITH_CAUTION') return 'USE WITH CAUTION';
-  if (riskLabel === 'DO_NOT_USE') return 'DO NOT USE';
-  return 'DATA UNAVAILABLE';
+  return riskLabel === null ? 'DATA UNAVAILABLE — CHECK BACK SOON' : BANNER_LABEL[riskLabel];
 }
 
 export default function RecommendationsScreen() {
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: Colors.secondaryText,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
     textTransform: 'uppercase',
   },
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
   },
   bannerLabel: {
     color: Colors.cardBackground,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
     opacity: 0.9,
     textTransform: 'uppercase',
@@ -149,7 +152,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: Colors.secondaryText,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
     textTransform: 'uppercase',
   },
@@ -163,8 +166,8 @@ const styles = StyleSheet.create({
   },
   transparency: {
     color: Colors.secondaryText,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 20,
   },
   shareButton: {
     alignItems: 'center',

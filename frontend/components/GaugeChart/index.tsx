@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: Colors.secondaryText,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     marginTop: 8,
     textAlign: 'center',

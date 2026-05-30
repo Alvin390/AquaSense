@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 2,
     color: Colors.darkText,
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
     maxWidth: 96,
   },

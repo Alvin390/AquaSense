@@ -8,6 +8,10 @@ export function formatTimestamp(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+export function formatRelativeTime(iso: string): string {
+  return formatTimestamp(iso);
+}
+
 export function formatPH(value: number): string {
   return `${value.toFixed(1)} pH`;
 }

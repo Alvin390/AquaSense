@@ -40,7 +40,7 @@ export function AIRecommendationCard({ text, iconType }: AIRecommendationCardPro
 const styles = StyleSheet.create({
   card: {
     alignItems: 'flex-start',
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.backgroundWhite,
     borderColor: Colors.skeletonBase,
     borderRadius: 8,
     borderWidth: 1,
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     color: Colors.cardBackground,
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '900',
   },
   text: {
