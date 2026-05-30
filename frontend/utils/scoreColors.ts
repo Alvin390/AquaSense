@@ -2,14 +2,10 @@
 
 import { Colors } from '../constants/theme';
 
-// Hardcoded fallback since grey is missing from the theme types
-const GREY_HEX = '#9CA3AF';
 
-/**
- * Returns the corresponding theme color based on a numeric score (0-100)
- * or an optional explicit status string.
- * Used by Ted's GaugeChart and Ralph's composite scores.
- */
+
+
+
 export function getStatusColor(score: number, status?: string): string {
   // If an explicit status string is provided, prioritize it
   if (status) {
@@ -17,11 +13,11 @@ export function getStatusColor(score: number, status?: string): string {
     if (normalizedStatus === 'SAFE') return Colors.safeGreen;
     if (normalizedStatus === 'CAUTION' || normalizedStatus === 'USE_WITH_CAUTION') return Colors.cautionAmber;
     if (normalizedStatus === 'UNSAFE' || normalizedStatus === 'DO_NOT_USE') return Colors.dangerRed;
-    if (normalizedStatus === 'NO_DATA') return GREY_HEX;
+    if (normalizedStatus === 'NO_DATA') return Colors.grey;
   }
 
   // Fallback to numeric score evaluation if no explicit status is given
-  if (score === undefined || score === null || isNaN(score)) return GREY_HEX;
+  if (score === undefined || score === null || isNaN(score)) return Colors.grey;
   if (score >= 70) return Colors.safeGreen;
   if (score >= 40) return Colors.cautionAmber;
   return Colors.dangerRed;
@@ -32,7 +28,7 @@ export function getStatusColor(score: number, status?: string): string {
  * Fulfills the explicit contract for Ted's WaterSourceMarker and Ralph's MapView.
  */
 export function getMarkerColor(status: string): string {
-  if (!status) return GREY_HEX;
+  if (!status) return Colors.grey;
 
   const normalized = status.toUpperCase().trim();
   switch (normalized) {
@@ -46,6 +42,6 @@ export function getMarkerColor(status: string): string {
       return Colors.dangerRed;
     case 'NO_DATA':
     default:
-      return GREY_HEX;
+      return Colors.grey;
   }
 }
