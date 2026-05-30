@@ -1,30 +1,89 @@
-// GaugeChart: circular arc gauge for Water Quality Score / Water Quantity Score (0–100)
-// Colors: green (≥75) → amber (≥45) → red (<45)
-// TODO: Ralph — implement arc with react-native-svg
-import { View, Text, StyleSheet } from 'react-native';
+// TED file/location: frontend/components/GaugeChart/index.tsx
+// Contract: Ralph imports this gauge for Tab 2 quality and quantity scores.
+import { StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
+import { Colors } from '@/constants/theme';
+import { scoreColors } from '@/utils/scoreColors';
 
-interface Props {
+export type GaugeStatus = 'SAFE' | 'CAUTION' | 'UNSAFE' | 'NO_DATA';
+
+interface GaugeChartProps {
   score: number;
   label: string;
+  status: GaugeStatus;
 }
 
-function scoreColor(s: number) {
-  if (s >= 75) return '#27AE60';
-  if (s >= 45) return '#F39C12';
-  return '#E74C3C';
+const SIZE = 132;
+const STROKE = 12;
+const RADIUS = (SIZE - STROKE) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+function statusColor(status: GaugeStatus, score: number) {
+  if (status === 'NO_DATA') return Colors.secondaryText;
+  if (status === 'CAUTION') return scoreColors.fromLabel('USE_WITH_CAUTION');
+  if (status === 'UNSAFE') return scoreColors.fromLabel('DO_NOT_USE');
+  if (status === 'SAFE') return scoreColors.fromLabel('SAFE');
+  return scoreColors.fromScore(score);
 }
 
-export function GaugeChart({ score, label }: Props) {
+export function GaugeChart({ score, label, status }: GaugeChartProps) {
+  const boundedScore = Math.max(0, Math.min(100, Number.isFinite(score) ? score : 0));
+  const color = statusColor(status, boundedScore);
+  const dashOffset = CIRCUMFERENCE - (boundedScore / 100) * CIRCUMFERENCE;
+
   return (
-    <View style={styles.container}>
-      <Text style={[styles.score, { color: scoreColor(score) }]}>{score}</Text>
+    <View accessibilityLabel={`${label} score ${boundedScore}`} style={styles.container}>
+      <View style={styles.gauge}>
+        <Svg width={SIZE} height={SIZE}>
+          <Circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            stroke={Colors.skeletonBase}
+            strokeWidth={STROKE}
+            fill="none"
+          />
+          <Circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            stroke={color}
+            strokeWidth={STROKE}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+            strokeDashoffset={dashOffset}
+            transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+          />
+        </Svg>
+        <Text style={[styles.score, { color }]}>{Math.round(boundedScore)}</Text>
+      </View>
       <Text style={styles.label}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', padding: 16 },
-  score: { fontSize: 40, fontWeight: 'bold' },
-  label: { fontSize: 13, color: '#8F9BB3', marginTop: 4 },
+  container: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  gauge: {
+    alignItems: 'center',
+    height: SIZE,
+    justifyContent: 'center',
+    width: SIZE,
+  },
+  score: {
+    fontSize: 34,
+    fontWeight: '800',
+    position: 'absolute',
+  },
+  label: {
+    color: Colors.secondaryText,
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 8,
+    textAlign: 'center',
+  },
 });

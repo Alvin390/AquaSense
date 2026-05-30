@@ -1,24 +1,47 @@
-// LiveSavedBadge: LIVE (teal) or Saved (grey) data freshness pill
-// "Saved" = offline/stale — never say "Cached" in user-facing text
-// TODO: Ralph
-import { View, Text, StyleSheet } from 'react-native';
+// TED file/location: frontend/components/LiveSavedBadge/index.tsx
+// Contract: Ralph imports this freshness badge for Tab 2 headers.
+import { StyleSheet, Text, View } from 'react-native';
+import { Colors } from '@/constants/theme';
+import { formatRelativeTime } from '@/utils/formatters';
 
-interface Props {
+interface LiveSavedBadgeProps {
   isLive: boolean;
-  hoursAgo?: number;
+  lastUpdated: string;
 }
 
-export function LiveSavedBadge({ isLive, hoursAgo }: Props) {
-  const label = isLive ? 'Live' : hoursAgo ? `Saved · ${hoursAgo}h ago` : 'Saved';
-  const color = isLive ? '#0A7EA4' : '#8F9BB3';
+export function LiveSavedBadge({ isLive, lastUpdated }: LiveSavedBadgeProps) {
+  const label = isLive ? 'Live' : `Saved · ${formatRelativeTime(lastUpdated)}`;
+  const color = isLive ? Colors.primaryTeal : Colors.cautionAmber;
+
   return (
-    <View style={[styles.badge, { backgroundColor: color }]}>
+    <View accessibilityLabel={label} style={styles.badge}>
+      <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={styles.text}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 9999 },
-  text: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  badge: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.cardBackground,
+    borderColor: Colors.skeletonBase,
+    borderRadius: 9999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  dot: {
+    borderRadius: 4,
+    height: 8,
+    width: 8,
+  },
+  text: {
+    color: Colors.darkText,
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });
