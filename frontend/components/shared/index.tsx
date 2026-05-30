@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontFamily: Typography.bodySemiBold,
-    fontSize: Typography.xs,
+    fontSize: 14,
     color: Colors.cardBackground,
   },
   skeletonBase: {
@@ -158,13 +158,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: Typography.heading,
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.secondaryText,
     textTransform: 'uppercase',
   },
   headerSubtitle: {
     fontFamily: Typography.body,
-    fontSize: Typography.xs,
+    fontSize: 14,
     color: Colors.secondaryText,
     marginTop: Spacing.xs,
   },
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   emptyMessage: {
     fontFamily: Typography.body,
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.secondaryText,
     textAlign: 'center',
     lineHeight: Typography.lg,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontFamily: Typography.bodySemiBold,
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.cardBackground,
   },
   unavailableContainer: {
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   },
   unavailableText: {
     fontFamily: Typography.body,
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.darkText,
     textAlign: 'center',
     marginBottom: Spacing.sm,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     fontFamily: Typography.bodySemiBold,
-    fontSize: Typography.xs,
+    fontSize: 14,
     color: Colors.primaryTeal,
   },
   divider: {
