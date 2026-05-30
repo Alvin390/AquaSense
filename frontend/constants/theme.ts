@@ -1,7 +1,7 @@
 // AquaSense design system — single source of truth for all visual tokens
 
 export const Colors = {
-  // Core brand palette
+  // Core brand palette (§1 — Product Identity)
   primaryTeal: '#0A7EA4',
   safeGreen: '#27AE60',
   cautionAmber: '#F39C12',
@@ -14,16 +14,19 @@ export const Colors = {
   cardBackground: '#FFFFFF',
   skeletonBase: '#E0EFEF',
   grey: '#9CA3AF',
+
+  // Dark mode (§19)
+  darkBackground: '#0D1B2A',
+  darkCard: '#1A2E35',
 };
 
-export const Fonts = {
-  // Font families (loaded via expo-font)
+// Typography — primary export name used by shared/index.tsx and other components
+export const Typography = {
   heading: 'PlusJakartaSans-Bold',
   body: 'Inter-Regular',
   bodySemiBold: 'Inter-SemiBold',
   mono: 'JetBrainsMono-Light',
 
-  // Typographic Scale
   xs: 11,
   sm: 13,
   base: 15,
@@ -32,6 +35,9 @@ export const Fonts = {
   xl: 24,
   xxl: 32,
 };
+
+// Fonts — alias kept for any existing imports
+export const Fonts = Typography;
 
 export const Spacing = {
   xs: 4,
@@ -49,13 +55,26 @@ export const Radius = {
   pill: 9999,
 };
 
+// React Native-compatible shadow objects (not CSS strings)
 export const Shadows = {
-  card: '0px 2px 8px rgba(0, 0, 0, 0.08)',
-  elevated: '0px 8px 16px rgba(0, 0, 0, 0.15)',
+  base: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  elevated: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
 };
 
 export const DarkMode = {
-  background: '#0D1B2A',
-  card: '#1A2E35',
-  text: '#F4FEFF',
+  background: Colors.darkBackground,
+  card: Colors.darkCard,
+  text: Colors.backgroundWhite,
 };
