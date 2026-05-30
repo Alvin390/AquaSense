@@ -1,17 +1,25 @@
+
 // AquaSense design system — single source of truth for all visual tokens
 
 export const Colors = {
+  // Brand identity refined for a modern, crisp feel
   primaryTeal: '#0A7EA4',
-  safeGreen: '#27AE60',
-  cautionAmber: '#F39C12',
-  dangerRed: '#E74C3C',
+  safeGreen: '#249E53',
+  cautionAmber: '#D97706',
+  dangerRed: '#DC2626',
+
+  // Neutral variations for high readability
   backgroundWhite: '#F4FEFF',
-  darkText: '#1A2E35',
-  secondaryText: '#8F9BB3',
+  darkText: '#0F252C',
+  secondaryText: '#627D86',
   cardBackground: '#FFFFFF',
-  darkBackground: '#0D1B2A',   // dark mode background
-  darkCard: '#1A2E35',         // dark mode card
-  skeletonBase: '#E0EFEF',
+
+  // Dark mode tokens
+  darkBackground: '#0B1519',
+  darkCard: '#132830',
+
+  // UI Element specific tones
+  skeletonBase: '#E2F3F5',
 };
 
 export const Typography = {
@@ -21,7 +29,7 @@ export const Typography = {
   bodySemiBold: 'Inter-SemiBold',
   mono: 'JetBrainsMono-Light',
 
-  // Scale
+  // Premium typographic scale
   xs: 11,
   sm: 13,
   base: 15,
