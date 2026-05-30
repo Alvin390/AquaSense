@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     debug: bool = True
     port: int = 8000
 
-    model_config = {"env_file": ".env"}
+    model_config = {"env_file": ".env", "extra": "ignore"}
 
 
 settings = Settings()

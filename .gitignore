@@ -14,6 +14,8 @@ MOSES_WORK.txt
 BRIAN_WORK.txt
 RALPH_WORK.txt
 TED_WORK.txt
+DEMO_SCRIPT.md
+backend/test_ai_integration.py
 
 # ── Environment / secrets ───────────────────────────────────────────────────────
 .env
