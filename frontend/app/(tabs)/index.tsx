@@ -58,7 +58,7 @@ const DEMO_STATS: Record<number, { ph: string; flood: string; level: string }> =
 export default function MapScreen() {
   const router = useRouter();
   const { setSelectedSource } = useWaterStore();
-  const { permissionGranted, userCoords, selectedCity, setCity } = useLocationStore();
+  const { hasPermission, userLocation, city: selectedCity, setCity } = useLocationStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showFloodOverlay, setShowFloodOverlay] = useState(false);
@@ -68,7 +68,7 @@ export default function MapScreen() {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: apiSources } = useWaterSources(selectedCity);
+  const { data: apiSources } = useWaterSources(selectedCity ?? undefined);
   const sources = (apiSources as any[]) ?? DEMO_SOURCES;
 
   const filteredSources = useMemo(() => {
@@ -105,7 +105,7 @@ export default function MapScreen() {
       {/* Full-bleed map */}
       <AquaSenseMap
         sources={filteredSources}
-        userCoords={permissionGranted ? userCoords : null}
+        userCoords={hasPermission ? userLocation : null}
         onMarkerPress={handleMarkerPress}
         showFloodOverlay={showFloodOverlay}
         showRainfallOverlay={showRainfallOverlay}
@@ -141,7 +141,7 @@ export default function MapScreen() {
         </View>
 
         {/* City fallback selector (shown when GPS denied) */}
-        {!permissionGranted && (
+        {!hasPermission && (
           <View style={styles.cityRow}>
             {CITIES.map((city) => (
               <TouchableOpacity

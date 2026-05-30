@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { LiveSavedBadge } from '@/components/LiveSavedBadge';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 import { useWaterStore } from '@/stores/waterStore';
 import { useLocationStore } from '@/stores/locationStore';
-import { useLatestReading, useSourceHistory } from '@/hooks/useWaterData';
+import { useSourceDetail, useSourceHistory } from '@/hooks/useWaterData';
 import { formatTimestamp, formatPH, formatFloodRisk, formatWaterLevel } from '@/utils/formatters';
 
 // Demo fallback data
@@ -73,13 +73,13 @@ function scoreLabel(score: number): string {
 export default function QualityScreen() {
   const router = useRouter();
   const { selectedSourceId } = useWaterStore();
-  const { isGPSMode } = useLocationStore();
+  const { isLive } = useLocationStore();
 
   const demo = selectedSourceId ? DEMO_BY_ID[selectedSourceId] : DEFAULT_SOURCE;
   const source = demo ?? DEFAULT_SOURCE;
 
-  const { data: apiLatest, isLoading, refetch, isFetching } = useLatestReading(selectedSourceId);
-  const { data: apiHistory } = useSourceHistory(selectedSourceId);
+  const { data: apiLatest, refetch, isFetching } = useSourceDetail(selectedSourceId ?? 0);
+  const { data: apiHistory } = useSourceHistory(selectedSourceId ?? 0);
 
   const latest = (apiLatest as any) ?? null;
 
@@ -108,7 +108,7 @@ export default function QualityScreen() {
             {source.lat.toFixed(4)}, {source.lng.toFixed(4)}
           </Text>
         </View>
-        <LiveSavedBadge isLive={isGPSMode || false} lastUpdated={fetchedAt} />
+        <LiveSavedBadge isLive={isLive} lastUpdated={fetchedAt} />
       </View>
 
       <ScrollView
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   aiCTABtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
   },
 });
