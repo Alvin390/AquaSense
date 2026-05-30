@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
@@ -10,7 +10,7 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Tabs screenOptions={{ headerShown: false }} />
     </QueryClientProvider>
   );
 }
