@@ -1,22 +1,68 @@
-// WaterSourceMarker: color-coded map pin (green=SAFE, amber=CAUTION, red=DO_NOT_USE)
-// Tap → bottom-sheet with quick stats + "View Full Details" CTA
-// TODO: Ralph (design) + Alex (data)
-import { View, StyleSheet } from 'react-native';
+// TED file/location: frontend/components/WaterSourceMarker/index.tsx
+// Contract: Ralph imports this marker for Tab 1 map pins.
+import { StyleSheet, Text, View } from 'react-native';
+import { Colors } from '@/constants/theme';
+import { scoreColors } from '@/utils/scoreColors';
 
-interface Props {
-  riskLabel: 'SAFE' | 'USE_WITH_CAUTION' | 'DO_NOT_USE';
+export type MarkerStatus = 'SAFE' | 'CAUTION' | 'UNSAFE' | 'NO_DATA';
+
+interface WaterSourceMarkerProps {
+  status: MarkerStatus;
+  name: string;
 }
 
-const COLOR: Record<string, string> = {
-  SAFE: '#27AE60',
-  USE_WITH_CAUTION: '#F39C12',
-  DO_NOT_USE: '#E74C3C',
-};
+function markerColor(status: MarkerStatus) {
+  if (status === 'NO_DATA') return Colors.secondaryText;
+  if (status === 'CAUTION') return scoreColors.fromLabel('USE_WITH_CAUTION');
+  if (status === 'UNSAFE') return scoreColors.fromLabel('DO_NOT_USE');
+  return scoreColors.fromLabel('SAFE');
+}
 
-export function WaterSourceMarker({ riskLabel }: Props) {
-  return <View style={[styles.pin, { backgroundColor: COLOR[riskLabel] ?? '#8F9BB3' }]} />;
+export function WaterSourceMarker({ status, name }: WaterSourceMarkerProps) {
+  const color = markerColor(status);
+
+  return (
+    <View accessibilityLabel={`${name} water source status ${status}`} style={styles.wrapper}>
+      <View style={[styles.pin, { borderBottomColor: color }]}>
+        <View style={[styles.dot, { backgroundColor: color }]} />
+      </View>
+      <Text numberOfLines={1} style={styles.label}>
+        {name}
+      </Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  pin: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: '#fff' },
+  wrapper: {
+    alignItems: 'center',
+    maxWidth: 96,
+  },
+  pin: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+    borderLeftWidth: 12,
+    borderRightWidth: 12,
+    borderBottomWidth: 22,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    transform: [{ rotate: '180deg' }],
+  },
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderColor: Colors.cardBackground,
+    borderWidth: 2,
+    transform: [{ rotate: '180deg' }, { translateY: -7 }],
+  },
+  label: {
+    marginTop: 2,
+    color: Colors.darkText,
+    fontSize: 11,
+    fontWeight: '700',
+    maxWidth: 96,
+  },
 });

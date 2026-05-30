@@ -1,43 +1,69 @@
-// AIRecommendationCard: renders Groq/Llama 3 output
-// 1. Risk banner (SAFE / USE WITH CAUTION / DO NOT USE)
-// 2. Summary paragraph
-// 3. Bulleted action list
-// TODO: Ralph (design) + Alex (data)
-import { View, Text, StyleSheet } from 'react-native';
+// TED file/location: frontend/components/AIRecommendationCard/index.tsx
+// Contract: Tab 3 imports this card for one AI recommendation bullet.
+import { StyleSheet, Text, View } from 'react-native';
+import { Colors } from '@/constants/theme';
 
-interface Props {
-  riskLabel?: 'SAFE' | 'USE_WITH_CAUTION' | 'DO_NOT_USE';
-  summary?: string;
-  recommendations?: string[];
+export type RecommendationIconType = 'BOIL' | 'FILTER' | 'AVOID' | 'SAFE' | 'CHECK';
+
+interface AIRecommendationCardProps {
+  text: string;
+  iconType: RecommendationIconType;
 }
 
-const BANNER_COLOR: Record<string, string> = {
-  SAFE: '#27AE60',
-  USE_WITH_CAUTION: '#F39C12',
-  DO_NOT_USE: '#E74C3C',
+const ICON_LABEL: Record<RecommendationIconType, string> = {
+  BOIL: 'B',
+  FILTER: 'F',
+  AVOID: '!',
+  SAFE: 'OK',
+  CHECK: '?',
 };
 
-export function AIRecommendationCard({ riskLabel, summary, recommendations }: Props) {
-  const color = BANNER_COLOR[riskLabel ?? ''] ?? '#8F9BB3';
+const ICON_COLOR: Record<RecommendationIconType, string> = {
+  BOIL: Colors.cautionAmber,
+  FILTER: Colors.primaryTeal,
+  AVOID: Colors.dangerRed,
+  SAFE: Colors.safeGreen,
+  CHECK: Colors.secondaryText,
+};
+
+export function AIRecommendationCard({ text, iconType }: AIRecommendationCardProps) {
   return (
     <View style={styles.card}>
-      {riskLabel && (
-        <View style={[styles.banner, { backgroundColor: color }]}>
-          <Text style={styles.bannerText}>{riskLabel.replace(/_/g, ' ')}</Text>
-        </View>
-      )}
-      {summary && <Text style={styles.summary}>{summary}</Text>}
-      {recommendations?.map((r, i) => (
-        <Text key={i} style={styles.bullet}>• {r}</Text>
-      ))}
+      <View style={[styles.icon, { backgroundColor: ICON_COLOR[iconType] }]}>
+        <Text style={styles.iconText}>{ICON_LABEL[iconType]}</Text>
+      </View>
+      <Text style={styles.text}>{text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', margin: 8 },
-  banner: { padding: 12 },
-  bannerText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  summary: { color: '#1A2E35', fontSize: 14, padding: 16, paddingBottom: 0 },
-  bullet: { color: '#1A2E35', fontSize: 14, paddingHorizontal: 16, paddingVertical: 4 },
+  card: {
+    alignItems: 'flex-start',
+    backgroundColor: Colors.cardBackground,
+    borderColor: Colors.skeletonBase,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 14,
+  },
+  icon: {
+    alignItems: 'center',
+    borderRadius: 16,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  iconText: {
+    color: Colors.cardBackground,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  text: {
+    color: Colors.darkText,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 21,
+  },
 });
