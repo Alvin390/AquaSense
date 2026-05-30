@@ -1,62 +1,64 @@
-// TED file/location: frontend/components/GaugeChart/index.tsx
-// Contract: Ralph imports this gauge for Tab 2 quality and quantity scores.
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '@/constants/theme';
-import { scoreColors } from '@/utils/scoreColors';
 
-export type GaugeStatus = 'SAFE' | 'CAUTION' | 'UNSAFE' | 'NO_DATA';
-
-interface GaugeChartProps {
+interface Props {
   score: number;
   label: string;
-  status: GaugeStatus;
+  status?: 'SAFE' | 'CAUTION' | 'UNSAFE' | 'NO_DATA';
 }
 
-const SIZE = 132;
-const STROKE = 12;
-const RADIUS = (SIZE - STROKE) / 2;
+const RADIUS = 44;
+const STROKE = 8;
+const SIZE = (RADIUS + STROKE) * 2 + 4;
+const CENTER = SIZE / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-function statusColor(status: GaugeStatus, score: number) {
-  if (status === 'NO_DATA') return Colors.secondaryText;
-  if (status === 'CAUTION') return scoreColors.fromLabel('USE_WITH_CAUTION');
-  if (status === 'UNSAFE') return scoreColors.fromLabel('DO_NOT_USE');
-  if (status === 'SAFE') return scoreColors.fromLabel('SAFE');
-  return scoreColors.fromScore(score);
+function arcColor(score: number): string {
+  if (score >= 75) return Colors.safeGreen;
+  if (score >= 45) return Colors.cautionAmber;
+  return Colors.dangerRed;
 }
 
-export function GaugeChart({ score, label, status }: GaugeChartProps) {
-  const boundedScore = Math.max(0, Math.min(100, Number.isFinite(score) ? score : 0));
-  const color = statusColor(status, boundedScore);
-  const dashOffset = CIRCUMFERENCE - (boundedScore / 100) * CIRCUMFERENCE;
+export function GaugeChart({ score, label, status }: Props) {
+  const clampedScore = Math.max(0, Math.min(100, score));
+  const color = arcColor(clampedScore);
+  const filled = (clampedScore / 100) * CIRCUMFERENCE;
+  const dashOffset = CIRCUMFERENCE - filled;
 
   return (
-    <View accessibilityLabel={`${label} score ${boundedScore}`} style={styles.container}>
-      <View style={styles.gauge}>
+    <View style={styles.container}>
+      <View style={styles.svgWrapper}>
         <Svg width={SIZE} height={SIZE}>
+          {/* Track */}
           <Circle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
+            cx={CENTER}
+            cy={CENTER}
             r={RADIUS}
-            stroke={Colors.skeletonBase}
+            stroke="#E8F4F8"
             strokeWidth={STROKE}
             fill="none"
           />
+          {/* Arc fill */}
           <Circle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
+            cx={CENTER}
+            cy={CENTER}
             r={RADIUS}
             stroke={color}
             strokeWidth={STROKE}
             fill="none"
-            strokeLinecap="round"
             strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
             strokeDashoffset={dashOffset}
-            transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+            strokeLinecap="round"
+            rotation="-90"
+            origin={`${CENTER}, ${CENTER}`}
           />
         </Svg>
-        <Text style={[styles.score, { color }]}>{Math.round(boundedScore)}</Text>
+        <View style={styles.center}>
+          <Text style={[styles.score, { color }]}>{clampedScore}</Text>
+          <Text style={styles.outOf}>/100</Text>
+        </View>
       </View>
       <Text style={styles.label}>{label}</Text>
     </View>
@@ -64,26 +66,35 @@ export function GaugeChart({ score, label, status }: GaugeChartProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    padding: 16,
-  },
-  gauge: {
-    alignItems: 'center',
-    height: SIZE,
-    justifyContent: 'center',
+  container: { alignItems: 'center' },
+  svgWrapper: {
+    position: 'relative',
     width: SIZE,
+    height: SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  center: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   score: {
-    fontSize: 34,
+    fontSize: 28,
     fontWeight: '800',
-    position: 'absolute',
+    letterSpacing: -1,
+    lineHeight: 30,
+  },
+  outOf: {
+    fontSize: 11,
+    color: Colors.secondaryText,
+    fontWeight: '500',
   },
   label: {
+    fontSize: 12,
     color: Colors.secondaryText,
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 8,
+    fontWeight: '600',
+    marginTop: 6,
     textAlign: 'center',
   },
 });
