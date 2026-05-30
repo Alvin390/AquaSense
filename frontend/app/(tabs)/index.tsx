@@ -72,6 +72,7 @@ export default function MapScreen() {
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const [selectedSource, setSelectedSourceLocal] = useState<SourceItem | null>(null);
   const [activeAlert, setActiveAlert] = useState<ActiveAlert | null>(null);
+  const [showSafeWater, setShowSafeWater] = useState(false);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -99,6 +100,23 @@ export default function MapScreen() {
 
   const { data: apiSources } = useWaterSources(selectedCity ?? undefined);
   const sources = (apiSources as any[]) ?? DEMO_SOURCES;
+
+  // Feature 2 — Find Safe Water: sort SAFE sources by distance from user
+  const safeSources = useMemo(() => {
+    const refLat = userLocation?.lat ?? -1.2921;
+    const refLng = userLocation?.lng ?? 36.8219;
+    return [...sources]
+      .filter((s) => s.risk_label === 'SAFE')
+      .map((s) => {
+        const dLat = (s.latitude - refLat) * Math.PI / 180;
+        const dLng = (s.longitude - refLng) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2
+          + Math.cos(refLat * Math.PI / 180) * Math.cos(s.latitude * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+        const distKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return { ...s, distKm };
+      })
+      .sort((a, b) => a.distKm - b.distKm);
+  }, [sources, userLocation]);
 
   const filteredSources = useMemo(() => {
     if (!searchQuery.trim()) return sources;
@@ -261,6 +279,56 @@ export default function MapScreen() {
                   <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Feature 2 — Find Safe Water floating button */}
+      <TouchableOpacity
+        style={styles.safeWaterBtn}
+        onPress={() => setShowSafeWater(true)}
+        activeOpacity={0.9}
+      >
+        <Ionicons name="search-circle" size={22} color="#FFFFFF" />
+        <Text style={styles.safeWaterBtnText}>Find Safe Water Near Me</Text>
+      </TouchableOpacity>
+
+      {/* Safe Water results modal */}
+      <Modal
+        visible={showSafeWater}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSafeWater(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowSafeWater(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.safeWaterTitle}>Safe Water Sources Near You</Text>
+            {safeSources.length === 0 ? (
+              <Text style={styles.safeWaterEmpty}>No SAFE sources found in current data. Check back after the next satellite refresh.</Text>
+            ) : (
+              safeSources.map((s) => (
+                <TouchableOpacity
+                  key={s.id}
+                  style={styles.safeSourceRow}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setSelectedSource(s.id);
+                    setShowSafeWater(false);
+                    router.push('/(tabs)/quality');
+                  }}
+                >
+                  <View style={styles.safeSourceDot} />
+                  <View style={styles.safeSourceInfo}>
+                    <Text style={styles.safeSourceName} numberOfLines={1}>{s.name}</Text>
+                    <Text style={styles.safeSourceDist}>
+                      {s.distKm < 1 ? `${Math.round(s.distKm * 1000)} m away` : `${s.distKm.toFixed(1)} km away`}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.primaryTeal} />
+                </TouchableOpacity>
+              ))
             )}
           </Pressable>
         </Pressable>
@@ -493,4 +561,52 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.2,
   },
+  // Feature 2 — Find Safe Water
+  safeWaterBtn: {
+    position: 'absolute',
+    bottom: 24,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.safeGreen,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  safeWaterBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  safeWaterTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.darkText,
+    marginBottom: Spacing.md,
+  },
+  safeWaterEmpty: {
+    fontSize: 14,
+    color: Colors.secondaryText,
+    lineHeight: 20,
+    paddingVertical: Spacing.md,
+  },
+  safeSourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8F4F8',
+    gap: 12,
+  },
+  safeSourceDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.safeGreen,
+  },
+  safeSourceInfo: { flex: 1 },
+  safeSourceName: { fontSize: 15, fontWeight: '600', color: Colors.darkText },
+  safeSourceDist: { fontSize: 14, color: Colors.secondaryText },
 });

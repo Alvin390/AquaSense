@@ -62,18 +62,33 @@ function levelStatus(level: string): 'SAFE' | 'CAUTION' | 'UNSAFE' {
   return 'SAFE';
 }
 
-function scoreLabel(score: number): string {
-  if (score >= 80) return 'SAFE';
-  if (score >= 60) return 'GOOD';
-  if (score >= 40) return 'MODERATE';
-  if (score >= 20) return 'CAUTION';
-  return 'UNSAFE';
+// Feature 9 — actionable drinking instructions instead of abstract labels
+function qualityActionLabel(score: number): string {
+  if (score >= 75) return '🟢  Drinkable after normal treatment';
+  if (score >= 45) return '🟡  Boil before drinking';
+  return '🔴  Avoid drinking';
+}
+
+function quantityActionLabel(score: number): string {
+  if (score >= 75) return '🟢  Adequate supply';
+  if (score >= 45) return '🟡  Limited — use carefully';
+  return '🔴  Very low — find alternative';
+}
+
+// Haversine distance in km between two lat/lng points
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 export default function QualityScreen() {
   const router = useRouter();
-  const { selectedSourceId } = useWaterStore();
-  const { isLive } = useLocationStore();
+  const { selectedSourceId, waterSources, setSelectedSource } = useWaterStore();
+  const { isLive, userLocation } = useLocationStore();
 
   const demo = selectedSourceId ? DEMO_BY_ID[selectedSourceId] : DEFAULT_SOURCE;
   const source = demo ?? DEFAULT_SOURCE;
@@ -90,6 +105,23 @@ export default function QualityScreen() {
   const quantityScore = latest?.ai_recommendation?.quantity_score ?? source.quantity_score;
   const fetchedAt = latest?.reading?.fetched_at ?? source.fetched_at;
   const sourceName = source.name;
+
+  // Feature 1 — Alternative source recommendations
+  const riskLabel = latest?.ai_recommendation?.risk_label ?? source.risk_label;
+  const needsAlternative = riskLabel === 'DO_NOT_USE' || riskLabel === 'USE_WITH_CAUTION';
+  const refLat = userLocation?.lat ?? source.lat;
+  const refLng = userLocation?.lng ?? source.lng;
+  const alternativeSources = needsAlternative
+    ? (waterSources.length > 0 ? waterSources : Object.values(DEMO_BY_ID))
+        .filter((s: any) => s.id !== selectedSourceId)
+        .map((s: any) => ({
+          ...s,
+          distKm: haversineKm(refLat, refLng, s.latitude ?? s.lat, s.longitude ?? s.lng),
+        }))
+        .filter((s: any) => s.risk_label === 'SAFE')
+        .sort((a: any, b: any) => a.distKm - b.distKm)
+        .slice(0, 3)
+    : [];
 
   const history7 = (apiHistory as any[]) ?? [];
   const phHistory = history7.length ? history7.map((r: any) => r.ph ?? 7.0) : undefined;
@@ -129,23 +161,19 @@ export default function QualityScreen() {
           Last updated: {formatTimestamp(fetchedAt)}
         </Text>
 
-        {/* Composite score gauges */}
+        {/* Composite score gauges — Feature 9: actionable labels */}
         <View style={styles.gaugeRow}>
           <View style={styles.gaugeCard}>
             <GaugeChart score={qualityScore} label="Water Quality" />
-            <View style={[styles.scoreBadge, { backgroundColor: badgeColor(qualityScore) + '20' }]}>
-              <Text style={[styles.scoreBadgeText, { color: badgeColor(qualityScore) }]}>
-                {scoreLabel(qualityScore)}
-              </Text>
-            </View>
+            <Text style={[styles.actionLabel, { color: badgeColor(qualityScore) }]} numberOfLines={2}>
+              {qualityActionLabel(qualityScore)}
+            </Text>
           </View>
           <View style={styles.gaugeCard}>
             <GaugeChart score={quantityScore} label="Water Quantity" />
-            <View style={[styles.scoreBadge, { backgroundColor: badgeColor(quantityScore) + '20' }]}>
-              <Text style={[styles.scoreBadgeText, { color: badgeColor(quantityScore) }]}>
-                {scoreLabel(quantityScore)}
-              </Text>
-            </View>
+            <Text style={[styles.actionLabel, { color: badgeColor(quantityScore) }]} numberOfLines={2}>
+              {quantityActionLabel(quantityScore)}
+            </Text>
           </View>
         </View>
 
@@ -178,6 +206,33 @@ export default function QualityScreen() {
         {/* 7-day trend chart */}
         <Text style={styles.sectionTitle}>7-Day Trend</Text>
         <TrendChart phData={phHistory} floodData={floodHistory} />
+
+        {/* Feature 1 — Alternative safe sources */}
+        {alternativeSources.length > 0 && (
+          <View style={styles.altSection}>
+            <Text style={styles.sectionTitle}>Nearest safer sources</Text>
+            {alternativeSources.map((s: any) => (
+              <TouchableOpacity
+                key={s.id}
+                style={styles.altCard}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setSelectedSource(s.id);
+                  router.push('/(tabs)/quality');
+                }}
+              >
+                <View style={styles.altSafeTag}>
+                  <Text style={styles.altSafeText}>SAFE</Text>
+                </View>
+                <View style={styles.altInfo}>
+                  <Text style={styles.altName} numberOfLines={1}>{s.name}</Text>
+                  <Text style={styles.altDist}>{s.distKm < 1 ? `${Math.round(s.distKm * 1000)}m` : `${s.distKm.toFixed(1)} km`} away</Text>
+                </View>
+                <Ionicons name="arrow-forward-circle-outline" size={22} color={Colors.primaryTeal} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View style={styles.aiCTA}>
           <Ionicons name="sparkles" size={16} color={Colors.primaryTeal} />
@@ -276,17 +331,42 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  scoreBadge: {
-    marginTop: Spacing.xs,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 9999,
-  },
-  scoreBadgeText: {
+  actionLabel: {
+    marginTop: 6,
     fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+    fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 20,
   },
+  altSection: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  altCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.safeGreen + '40',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  altSafeTag: {
+    backgroundColor: Colors.safeGreen + '20',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  altSafeText: { fontSize: 14, color: Colors.safeGreen, fontWeight: '800' },
+  altInfo: { flex: 1 },
+  altName: { fontSize: 15, color: Colors.darkText, fontWeight: '600' },
+  altDist: { fontSize: 14, color: Colors.secondaryText },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
